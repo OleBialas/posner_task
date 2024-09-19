@@ -1,0 +1,7 @@
+{
+    "fixation_dur": 0.5,
+    "cue_dur": 1,
+    "n_blocks": 1,
+    "n_trials": 20,
+    "p_valid":0.8
+}

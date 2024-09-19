@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 from psychopy import visual, core, event
 import numpy as np
 from sequence import Block
@@ -6,12 +7,7 @@ from sequence import Block
 root = Path(__file__).parent.absolute()
 win = visual.Window(fullscr=True)
 clock = core.Clock()
-
-fixation_dur = 0.5
-cue_dur = 1
-n_blocks = 1
-n_trials = 20
-p_valid = 0.8
+p = json.load(open(root / "parameters.json"))
 
 
 def run_experiment(subject_id):
@@ -28,15 +24,15 @@ def run_experiment(subject_id):
     win.flip()
     event.waitKeys(keyList=["space"])
 
-    for i_block in range(n_blocks):
+    for i_block in range(p["n_blocks"]):
         text = visual.TextStim(
-            win, text=f"Press space to start block {i_block+1} of {n_blocks}"
+            win, text=f"Press space to start block {i_block+1} of {p['n_blocks']}"
         )
         text.draw()
         win.flip()
         event.waitKeys(keyList=["space"])
 
-        block_sequence = Block(n_trials, p_valid)
+        block_sequence = Block(p["n_trials"], p["p_valid"])
         run_block(block_sequence)
         block_sequence.save(subject_dir / f"{subject}_block{i_block+1}.csv")
 
@@ -69,7 +65,7 @@ def run_trial(position, valid):
     draw_fixation()
     win.flip()
 
-    core.wait(fixation_dur)
+    core.wait(p["fixation_dur"])
 
     draw_frames()
     draw_fixation()
@@ -79,7 +75,7 @@ def run_trial(position, valid):
         draw_frames(highlight="right")
     win.flip()
 
-    core.wait(cue_dur)
+    core.wait(p["cue_dur"])
 
     draw_stimulus(position)
     win.flip()
