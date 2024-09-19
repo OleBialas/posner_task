@@ -1,19 +1,58 @@
+from pathlib import Path
 from psychopy import visual, core, event
 import numpy as np
+from sequence import Block
 
-resolution = (1920, 1080)
-width_scaling = resolution[1] / resolution[0]
-win = visual.Window(size=resolution, fullscr=False)
+root = Path(__file__).parent.absolute()
+win = visual.Window(fullscr=True)
 clock = core.Clock()
 
-
-fixation_dur = 1
+fixation_dur = 0.5
 cue_dur = 1
+n_blocks = 1
+n_trials = 20
+p_valid = 0.8
+
+
+def run_experiment(subject_id):
+    subject = f"sub-{str(subject_id).zfill(2)}"
+    subject_dir = root / "data" / subject
+    if not subject_dir.exists():
+        subject_dir.mkdir(parents=True)
+
+    text = visual.TextStim(
+        win,
+        text="Welcome to the experiment! \n \n Look at the white fixation point in the middle of the screen. \n \n When a black dot appears, indicate if it is on the left or right using the arrow keys. \n \n Respond as fast as possible! \n \n Press space to continue",
+    )
+    text.draw()
+    win.flip()
+    event.waitKeys(keyList=["space"])
+
+    for i_block in range(n_blocks):
+        text = visual.TextStim(
+            win, text=f"Press space to start block {i_block+1} of {n_blocks}"
+        )
+        text.draw()
+        win.flip()
+        event.waitKeys(keyList=["space"])
+
+        block_sequence = Block(n_trials, p_valid)
+        run_block(block_sequence)
+        block_sequence.save(subject_dir / f"{subject}_block{i_block+1}.csv")
+
+    text = visual.TextStim(
+        win,
+        text=f"Thank you for participating in the experiment! \n \n Press space to exit.",
+    )
+    text.draw()
+    win.flip()
+    event.waitKeys(keyList=["space"])
 
 
 def run_block(sequence):
     for position, valid in sequence:
         response, response_time = run_trial(position, valid)
+        sequence.add_response(response, response_time)
 
 
 def run_trial(position, valid):
@@ -33,6 +72,7 @@ def run_trial(position, valid):
     core.wait(fixation_dur)
 
     draw_frames()
+    draw_fixation()
     if (position == "left" and valid) or (position == "right" and not valid):
         draw_frames(highlight="left")
     else:
@@ -66,7 +106,7 @@ def draw_frames(highlight=None):
 
 def draw_fixation():
     fixation = visual.Circle(  # size adjusts scaling for screen size
-        win, radius=0.01, size=(1 * width_scaling, 1), fillColor="white"
+        win, radius=0.01, size=(1 * 1 / win.aspect, 1), fillColor="white"
     )
     fixation.draw()
     pass
@@ -83,7 +123,7 @@ def draw_stimulus(side):
         win,
         pos=[x_pos, 0],
         radius=0.02,
-        size=(1 * width_scaling, 1),
+        size=(1 * 1 / win.aspect, 1),
         fillColor="black",
         lineColor=None,
     )
@@ -91,6 +131,5 @@ def draw_stimulus(side):
 
 
 if __name__ == "__main__":
-    response, response_time = run_trial("left", True)
-    print(response, response_time)
+    run_experiment(1)
     win.close()

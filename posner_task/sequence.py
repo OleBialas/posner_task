@@ -15,11 +15,11 @@ class Block(collections.abc.Iterator):
         self.response_time = [None] * n_trials
 
     def __next__(self):
-        self.this_n += 1
         if self.this_n == self.n_trials:
             raise StopIteration
         else:
-            return self.side[self.this_n], self.valid[self.this_n]
+            self.this_n += 1
+            return self.side[self.this_n - 1], self.valid[self.this_n - 1]
 
     @staticmethod
     def make_trial_sequence(n_trials, p_valid, min_dist=3, max_iter=1000):
@@ -47,13 +47,16 @@ class Block(collections.abc.Iterator):
         return side, valid
 
     def add_response(self, response, response_time):
-        self.response[self.this_n] = response
-        self.response_time[self.this_n] = response
+        if self.this_n == 0:
+            raise ValueError("Sequence has not been started!")
+        else:
+            self.response[self.this_n - 1] = response
+            self.response_time[self.this_n - 1] = response
 
     def save(self, path, mkdir=False):
         path = Path(path)
         if not path.suffix == ".csv":
-            path = path.parent / path.name + ".csv"
+            path = path.parent / (path.name + ".csv")
         if not path.parent.exists():
             if mkdir:
                 path.parent.mkdir(parents=True)
