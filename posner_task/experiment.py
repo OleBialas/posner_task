@@ -6,19 +6,9 @@ width_scaling = resolution[1] / resolution[0]
 win = visual.Window(size=resolution, fullscr=False)
 clock = core.Clock()
 
-arrow_vertices = np.array(
-    [
-        [-0.06, 0.01],
-        [-0.06, -0.01],
-        [-0.02, -0.01],
-        [-0.02, -0.03],
-        [0.02, 0],
-        [-0.02, 0.03],
-        [-0.02, 0.01],
-    ]
-)
-fixation_dur = 0.25
-cue_dur = 0.5
+
+fixation_dur = 1
+cue_dur = 1
 
 
 def run_block(sequence):
@@ -44,14 +34,13 @@ def run_trial(position, valid):
 
     draw_frames()
     if (position == "left" and valid) or (position == "right" and not valid):
-        draw_arrow("left")
+        draw_frames(highlight="left")
     else:
-        draw_arrow("right")
+        draw_frames(highlight="right")
     win.flip()
 
     core.wait(cue_dur)
 
-    draw_frames()
     draw_stimulus(position)
     win.flip()
     clock.reset()
@@ -63,9 +52,15 @@ def run_trial(position, valid):
     return response, response_time
 
 
-def draw_frames():
-    for x_pos in [-0.5, 0.5]:  # draw frames where stimulus may appear
-        frame = visual.Rect(win, lineColor="white", pos=(x_pos, 0))
+def draw_frames(highlight=None):
+    if highlight is not None and highlight not in ["left", "right"]:
+        raise ValueError("highlight must be None, 'left' or 'right'!")
+    for side, x_pos in zip(["left", "right"], [-0.5, 0.5]):
+        if side == highlight:
+            color = "red"
+        else:
+            color = "white"
+        frame = visual.Rect(win, lineColor=color, pos=(x_pos, 0))
         frame.draw()
 
 
@@ -74,15 +69,6 @@ def draw_fixation():
         win, radius=0.01, size=(1 * width_scaling, 1), fillColor="white"
     )
     fixation.draw()
-    pass
-
-
-def draw_arrow(point):
-    if point == "left":
-        cue = visual.ShapeStim(win, vertices=arrow_vertices * -1, lineColor="red")
-    else:
-        cue = visual.ShapeStim(win, vertices=arrow_vertices * 1, lineColor="red")
-    cue.draw()
     pass
 
 
