@@ -1,4 +1,5 @@
 from pathlib import Path
+import argparse
 import json
 from psychopy import visual, core, event
 import numpy as np
@@ -127,5 +128,8 @@ def draw_stimulus(side):
 
 
 if __name__ == "__main__":
-    run_experiment(1)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("subject_id", type=int)
+    args = parser.parse_args()
+    run_experiment(args.subject_id)
     win.close()
