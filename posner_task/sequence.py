@@ -5,6 +5,7 @@ import numpy as np
 
 
 class Block(collections.abc.Iterator):
+
     def __init__(self, n_trials, p_valid, min_dist=3, max_iter=1000):
         self.side, self.valid = self.make_trial_sequence(
             n_trials, p_valid, min_dist, max_iter
@@ -51,7 +52,7 @@ class Block(collections.abc.Iterator):
             raise ValueError("Sequence has not been started!")
         else:
             self.response[self.this_n - 1] = response
-            self.response_time[self.this_n - 1] = response
+            self.response_time[self.this_n - 1] = response_time
 
     def save(self, path, mkdir=False):
         path = Path(path)

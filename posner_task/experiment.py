@@ -5,6 +5,7 @@ from psychopy import visual, core, event
 import numpy as np
 from sequence import Block
 
+
 root = Path(__file__).parent.absolute()
 win = visual.Window(fullscr=True)
 clock = core.Clock()
@@ -106,7 +107,6 @@ def draw_fixation():
         win, radius=0.01, size=(1 * 1 / win.aspect, 1), fillColor="white"
     )
     fixation.draw()
-    pass
 
 
 def draw_stimulus(side):
