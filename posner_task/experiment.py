@@ -1,15 +1,16 @@
 import argparse
 import json
 import numbers
+import random
+import csv
 from pathlib import Path
-from typing import Literal, Tuple, Optional
+from typing import Literal, Tuple, List
 from psychopy import visual, core, event
-from sequence import Block
 
 
 def run_experiment(subject_id: int, config: str):
 
-    root, fixation_dur, cue_dur, n_blocks, n_trials, p_valid = read_config(config)
+    root, fix_dur, cue_dur, n_blocks, n_trials, p_valid = read_config(config)
     subject_dir = create_subject_dir(root, subject_id)
     win = visual.Window(fullscr=True)
     clock = core.Clock()
@@ -20,8 +21,10 @@ def run_experiment(subject_id: int, config: str):
     for i_block in range(n_blocks):
         draw_text(win, f"block {i_block+1} of {n_blocks}")
         event.waitKeys(keyList=["space"])
-        run_block(win, clock, n_trials, p_valid, fixation_dur, cue_dur)
-        # block_sequence.save(subject_dir / f"{subject_dir.name}_block{i_block+1}.csv")
+        side, valid, response, response_time = run_block(
+            win, clock, n_trials, p_valid, fix_dur, cue_dur
+        )
+        write_csv(subject_dir, i_block, side, valid, response, response_time)
 
     draw_text(win, "goodbye")
     event.waitKeys(keyList=["space"])
@@ -29,22 +32,35 @@ def run_experiment(subject_id: int, config: str):
     win.close()
 
 
-def run_block(win, clock, n_trials, p_valid, fixation_dur, cue_dur):
+def run_block(
+    win: visual.Window,
+    clock: core.Clock,
+    n_trials: int,
+    p_valid: float,
+    fix_dur: float,
+    cue_dur: float,
+) -> Tuple[
+    List[Literal["left", "right"]],
+    List[bool],
+    List[Literal["left", "right"]],
+    List[float],
+]:
 
-    sequence = Block(n_trials, p_valid)
-    for position, valid in sequence:
-        response, response_time = run_trial(
-            win, clock, position, valid, fixation_dur, cue_dur
-        )
-        sequence.add_response(response, response_time)
+    side, valid = make_sequence(n_trials, p_valid)
+    response, response_time = [], []
+    for s, v in zip(side, valid):
+        r, rt = run_trial(win, clock, s, v, fix_dur, cue_dur)
+        response.append(r)
+        response_time.append(rt)
+    return side, valid, response, response_time
 
 
 def run_trial(
     win: visual.Window,
     clock: core.Clock,
-    position: Literal["left", "right"],
+    side: Literal["left", "right"],
     valid: bool,
-    fixation_dur: float,
+    fix_dur: float,
     cue_dur: float,
 ) -> Tuple[bool, float]:
 
@@ -52,11 +68,11 @@ def run_trial(
     draw_fixation(win)
     win.flip()
 
-    core.wait(fixation_dur)
+    core.wait(fix_dur)
 
     draw_frames(win, highlight=None)
     draw_fixation(win)
-    if (position == "left" and valid) or (position == "right" and not valid):
+    if (side == "left" and valid) or (side == "right" and not valid):
         draw_frames(win, highlight="left")
     else:
         draw_frames(win, highlight="right")
@@ -64,7 +80,7 @@ def run_trial(
 
     core.wait(cue_dur)
 
-    draw_stimulus(win, position)
+    draw_stimulus(win, side)
     win.flip()
     clock.reset()
 
@@ -73,6 +89,24 @@ def run_trial(
     response = keys[0]
 
     return response, response_time
+
+
+def make_sequence(
+    n_trials: int, p_valid: float
+) -> Tuple[List[Literal["left", "right"]], List[bool]]:
+    side, valid = [], []
+    if n_trials / 2 * p_valid % 1 != 0:
+        raise ValueError("Trials can't be evenly divided between conditions!")
+
+    for s in ["left", "right"]:
+        n = int(n_trials / 2)
+        side += [s] * n
+        n_valid = int(n * p_valid)
+        valid += [True] * n_valid + [False] * (n - n_valid)
+    idx = list(range(n_trials))
+    random.shuffle(idx)
+
+    return [side[i] for i in idx], [valid[i] for i in idx]
 
 
 def draw_frames(win: visual.Window, highlight: Literal["left", "right", None]) -> None:
@@ -145,9 +179,9 @@ def read_config(config: str) -> Tuple[Path, float, float, int, int, float]:
             f"Couldn't find root directory {root}. Create it or edit the configuration!"
         )
     assert all(
-        [isinstance(cfg[key], numbers.Number) for key in ["fixation_dur", "cue_dur"]]
-    ), "fixation_dur and cue_dur must be scalar values!"
-    fixation_dur, cue_dur = float(cfg["fixation_dur"]), float(cfg["cue_dur"])
+        [isinstance(cfg[key], numbers.Number) for key in ["fix_dur", "cue_dur"]]
+    ), "fix_dur and cue_dur must be scalar values!"
+    fix_dur, cue_dur = float(cfg["fix_dur"]), float(cfg["cue_dur"])
 
     assert all(
         [isinstance(cfg[key], int) for key in ["n_blocks", "n_trials"]]
@@ -156,7 +190,24 @@ def read_config(config: str) -> Tuple[Path, float, float, int, int, float]:
 
     p_valid = cfg["p_valid"]
     assert 1 > p_valid > 0, "p_calid must be a value between 0 and 1!"
-    return (root, fixation_dur, cue_dur, n_blocks, n_trials, p_valid)
+    return (root, fix_dur, cue_dur, n_blocks, n_trials, p_valid)
+
+
+def write_csv(
+    subject_dir: Path,
+    i_block: int,
+    side: List[Literal["left", "right"]],
+    valid: List[bool],
+    response: List[Literal["left", "right"]],
+    response_time: List[float],
+) -> None:
+
+    file_path = subject_dir / f"{subject_dir.name}_block{i_block+1}.csv"
+    rows = zip(side, valid, response, response_time)
+    with open(file_path, "w", newline="") as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow(["side", "valid", "response", "response_time"])
+        csvwriter.writerows(rows)
 
 
 if __name__ == "__main__":
