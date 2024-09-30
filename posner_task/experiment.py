@@ -10,7 +10,7 @@ from psychopy import visual, core, event
 
 def run_experiment(subject_id: int, config: str):
 
-    root, fix_dur, cue_dur, n_blocks, n_trials, p_valid = read_config(config)
+    root, fix_dur, cue_dur, n_blocks, n_trials, p_valid = load_config(config)
     subject_dir = create_subject_dir(root, subject_id)
     win = visual.Window(fullscr=True)
     clock = core.Clock()
@@ -169,27 +169,61 @@ def create_subject_dir(root: Path, subject_id: int) -> Path:
     return subject_dir
 
 
-def read_config(config: str) -> Tuple[Path, float, float, int, int, float]:
-    if not Path(config).exists():
-        raise FileNotFoundError(f"Couldn't find config file at {config}")
-    cfg = json.load(open(config))
-    root = Path(cfg["root"])
+def load_config(config_file: str) -> Tuple[Path, float, float, int, int, float]:
+    config_dict = _read_config(config_file)
+    return _check_config_dict(config_dict)
+
+
+def _read_config(config_file: str) -> dict:
+    if not Path(config_file).exists():
+        raise FileNotFoundError(f"Couldn't find config file at {config_file}")
+    config_dict = json.load(open(config_file))
+    return config_dict
+
+
+def _check_config_dict(config_dict: dict) -> Tuple[Path, float, float, int, int, float]:
+
+    for key in ["root", "fix_dur", "cue_dur", "n_blocks", "n_trials", "p_valid"]:
+        if not key in config_dict.keys():
+            raise KeyError(f"Config file does not contain {key}!")
+
+    root = Path(config_dict["root"])
     if not root.exists():
         raise FileNotFoundError(
             f"Couldn't find root directory {root}. Create it or edit the configuration!"
         )
-    assert all(
-        [isinstance(cfg[key], numbers.Number) for key in ["fix_dur", "cue_dur"]]
-    ), "fix_dur and cue_dur must be scalar values!"
-    fix_dur, cue_dur = float(cfg["fix_dur"]), float(cfg["cue_dur"])
 
-    assert all(
-        [isinstance(cfg[key], int) for key in ["n_blocks", "n_trials"]]
-    ), "n_blocks and n_trials must be integers!"
-    n_blocks, n_trials = cfg["n_blocks"], cfg["n_trials"]
+    if not (
+        all(
+            [
+                isinstance(config_dict[key], numbers.Number)
+                for key in ["fix_dur", "cue_dur"]
+            ]
+        )
+        and all([config_dict[key] > 0 for key in ["fix_dur", "cue_dur"]])
+    ):
+        raise TypeError("fix_dur and cue_dur must be positive scalar values!")
 
-    p_valid = cfg["p_valid"]
-    assert 1 > p_valid > 0, "p_calid must be a value between 0 and 1!"
+    fix_dur, cue_dur = float(config_dict["fix_dur"]), float(config_dict["cue_dur"])
+
+    if not all([isinstance(config_dict[key], int) for key in ["n_blocks", "n_trials"]]):
+        raise TypeError("n_blocks and n_trials must be integers!")
+    n_blocks, n_trials = config_dict["n_blocks"], config_dict["n_trials"]
+
+    if not isinstance(config_dict["p_valid"], float):
+        raise TypeError("p_valid must be a float!")
+
+    if not 1 >= config_dict["p_valid"] > 0:
+        raise ValueError("p_calid must be a value between 0 and 1!")
+    p_valid = config_dict["p_valid"]
+
+    try:
+        make_sequence(n_trials, p_valid)
+    except ValueError:
+        raise ValueError(
+            f"Can't generate sequence with n_trials={n_trials} and p_valid={p_valid}"
+        )
+
     return (root, fix_dur, cue_dur, n_blocks, n_trials, p_valid)
 
 
