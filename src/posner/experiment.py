@@ -15,7 +15,7 @@ def test_experiment(subject_id: int, config: str, overwrite: bool = False):
     def mock_waitKeys(keyList):
         return [random.choice(keyList)]
 
-    with patch("experiment.event.waitKeys", side_effect=mock_waitKeys):
+    with patch("posner.experiment.event.waitKeys", side_effect=mock_waitKeys):
         run_experiment(subject_id, config, overwrite)
 
     # clean up
@@ -163,7 +163,7 @@ def draw_text(win: visual.Window, message: str) -> None:
         text = "Welcome to the experiment! \n \n Look at the white fixation point in the middle of the screen. \n \n When a black dot appears, indicate if it is on the left or right using the arrow keys. \n \n Respond as fast as possible! \n \n Press space to continue"
     elif message == "goodbye":
         text = (
-            f"Thank you for participating in the experiment! \n \n Press space to exit.",
+            "Thank you for participating in the experiment! \n \n Press space to exit.",
         )
     else:
         text = f"Press space to start {message}"
@@ -260,6 +260,7 @@ def write_csv(
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(["side", "valid", "response", "response_time"])
         csvwriter.writerows(rows)
+
 
 def main_cli():
     parser = argparse.ArgumentParser()
