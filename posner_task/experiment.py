@@ -8,10 +8,10 @@ from typing import Literal, Tuple, List
 from psychopy import visual, core, event
 
 
-def run_experiment(subject_id: int, config: str):
+def run_experiment(subject_id: int, config: str, overwrite: bool = False):
 
     root, fix_dur, cue_dur, n_blocks, n_trials, p_valid = load_config(config)
-    subject_dir = create_subject_dir(root, subject_id)
+    subject_dir = create_subject_dir(root, subject_id, overwrite)
     win = visual.Window(fullscr=True)
     clock = core.Clock()
 
@@ -156,16 +156,18 @@ def draw_text(win: visual.Window, message: str) -> None:
     win.flip()
 
 
-def create_subject_dir(root: Path, subject_id: int) -> Path:
+def create_subject_dir(root: Path, subject_id: int, overwrite: bool) -> Path:
     subject = f"sub-{str(subject_id).zfill(2)}"
-    if not root.exists():
-        raise FileNotFoundError(
-            f"Directorty {root} not found! Create directory or edit configuration!"
-        )
+    subject_dir = Path(root) / "data" / subject
+    if subject_dir.exists():
+        if overwrite is True:
+            pass
+        else:
+            raise FileExistsError(
+                f"Folder for subject {subject} already exists! \n Change the subject ID or use the --overwrite flag!"
+            )
     else:
-        subject_dir = Path(root) / "data" / subject
-        if not subject_dir.exists():
-            subject_dir.mkdir(parents=True)
+        subject_dir.mkdir(parents=True)
     return subject_dir
 
 
@@ -245,9 +247,9 @@ def write_csv(
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument("subject_id", type=int)
     parser.add_argument("config", type=str)
+    parser.add_argument("--overwrite")
     args = parser.parse_args()
     run_experiment(args.subject_id, args.config)
