@@ -3,9 +3,25 @@ import json
 import numbers
 import random
 import csv
+import shutil
 from pathlib import Path
+from unittest.mock import patch
 from typing import Literal, Tuple, List
 from psychopy import visual, core, event
+
+
+def test_experiment(subject_id: int, config: str, overwrite: bool = False):
+
+    def mock_waitKeys(keyList):
+        return [random.choice(keyList)]
+
+    with patch("experiment.event.waitKeys", side_effect=mock_waitKeys):
+        run_experiment(subject_id, config, overwrite)
+
+    # clean up
+    root = json.load(open(config))["root"]
+    sub_dir = Path(root) / "data" / f"sub-{str(subject_id).zfill(2)}"
+    shutil.rmtree(sub_dir)
 
 
 def run_experiment(subject_id: int, config: str, overwrite: bool = False):
@@ -250,6 +266,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("subject_id", type=int)
     parser.add_argument("config", type=str)
-    parser.add_argument("--overwrite")
+    parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument("--test", action="store_true")
     args = parser.parse_args()
-    run_experiment(args.subject_id, args.config)
+    if args.test is False:
+        run_experiment(args.subject_id, args.config, args.overwrite)
+    else:
+        test_experiment(args.subject_id, args.config, args.overwrite)
