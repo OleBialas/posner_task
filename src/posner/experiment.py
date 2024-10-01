@@ -261,8 +261,7 @@ def write_csv(
         csvwriter.writerow(["side", "valid", "response", "response_time"])
         csvwriter.writerows(rows)
 
-
-if __name__ == "__main__":
+def main_cli():
     parser = argparse.ArgumentParser()
     parser.add_argument("subject_id", type=int)
     parser.add_argument("config", type=str)
@@ -273,3 +272,7 @@ if __name__ == "__main__":
         run_experiment(args.subject_id, args.config, args.overwrite)
     else:
         test_experiment(args.subject_id, args.config, args.overwrite)
+
+
+if __name__ == "__main__":
+    main_cli()
