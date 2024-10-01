@@ -162,9 +162,7 @@ def draw_text(win: visual.Window, message: str) -> None:
     if message == "hello":
         text = "Welcome to the experiment! \n \n Look at the white fixation point in the middle of the screen. \n \n When a black dot appears, indicate if it is on the left or right using the arrow keys. \n \n Respond as fast as possible! \n \n Press space to continue"
     elif message == "goodbye":
-        text = (
-            "Thank you for participating in the experiment! \n \n Press space to exit.",
-        )
+        text = "Thank you for participating! \n \n Press space to exit."
     else:
         text = f"Press space to start {message}"
     text_stim = visual.TextStim(win, text=text)
