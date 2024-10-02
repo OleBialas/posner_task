@@ -1,7 +1,7 @@
 import os
 import json
-import tempfile
 import pytest
+from posner.experiment import create_subject_dir
 
 
 @pytest.fixture
@@ -17,8 +17,13 @@ def create_config():
 
 
 @pytest.fixture
-def write_config(create_config):
-    with tempfile.TemporaryDirectory() as tmpdir:
-        config_fname = os.path.join(tmpdir, "sample_config.json")
-        json.dump(create_config, open(config_fname, "w"))
-        yield create_config, config_fname
+def write_config(create_config, tmpdir):
+    config_fname = os.path.join(tmpdir, "sample_config.json")
+    json.dump(create_config, open(config_fname, "w"))
+    yield create_config, config_fname
+
+
+@pytest.fixture
+def create_temp_subject_dir(tmpdir):
+    subject_dir = create_subject_dir(tmpdir, 1, False)
+    return subject_dir

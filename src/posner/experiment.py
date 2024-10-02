@@ -40,7 +40,7 @@ def run_experiment(subject_id: int, config: str, overwrite: bool = False):
         side, valid, response, response_time = run_block(
             win, clock, n_trials, p_valid, fix_dur, cue_dur
         )
-        write_csv(subject_dir, i_block, side, valid, response, response_time)
+        _ = write_csv(subject_dir, i_block, side, valid, response, response_time)
 
     draw_text(win, "goodbye")
     event.waitKeys(keyList=["space"])
@@ -250,7 +250,7 @@ def write_csv(
     valid: List[bool],
     response: List[Literal["left", "right"]],
     response_time: List[float],
-) -> None:
+) -> Path:
 
     file_path = subject_dir / f"{subject_dir.name}_block{i_block+1}.csv"
     rows = zip(side, valid, response, response_time)
@@ -258,6 +258,7 @@ def write_csv(
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(["side", "valid", "response", "response_time"])
         csvwriter.writerows(rows)
+    return file_path
 
 
 def main_cli():
