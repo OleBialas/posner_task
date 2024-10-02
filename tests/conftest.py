@@ -1,6 +1,8 @@
 import os
 import json
+from unittest import mock
 import pytest
+from psychopy import visual
 from posner.experiment import create_subject_dir
 
 
@@ -27,3 +29,22 @@ def write_config(create_config, tmpdir):
 def create_temp_subject_dir(tmpdir):
     subject_dir = create_subject_dir(tmpdir, 1, False)
     return subject_dir
+
+
+@pytest.fixture
+def mock_window():
+    with mock.patch.object(visual, "Window") as MockWin:
+        MockWin.flip.return_value = None
+        yield MockWin
+
+
+@pytest.fixture
+def mock_circle():
+    with mock.patch.object(visual, "Circle") as MockCircle:
+        yield MockCircle
+
+
+@pytest.fixture
+def mock_text():
+    with mock.patch.object(visual, "TextStim") as MockText:
+        yield MockText
