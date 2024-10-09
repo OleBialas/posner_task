@@ -19,22 +19,24 @@ class Config(BaseModel):
     p_valid: float
 
     @field_validator("root_dir")
-    def root_dir_exists(self, value: str) -> Path:
+    @staticmethod
+    def root_dir_exists(value: str) -> Path:
         root_dir = Path(value)
         assert root_dir.exists()
         return root_dir
 
     @field_validator("p_valid")
-    def p_valid_is_percentage(self, value: float) -> float:
+    @staticmethod
+    def p_valid_is_percentage(value: float) -> float:
         assert 0 <= value <= 1
         return value
 
     @model_validator(mode="after")
-    def conditions_can_be_divided_into_n_trials(self):
-        p_min = min(self.p_valid, 1 - self.p_valid)
+    def conditions_can_be_divided_into_n_trials(values):
+        p_min = min(values.p_valid, 1 - values.p_valid)
         N = 1 / p_min
-        assert self.n_trials % N == 0
-        return self
+        assert values.n_trials % N == 0
+        return values
 
 
 def test_experiment(subject_id: int, config: str, overwrite: bool = False):
