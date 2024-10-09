@@ -13,7 +13,7 @@ def create_config():
         "fix_dur": 0.1,
         "cue_dur": 0.2,
         "n_blocks": 1,
-        "n_trials": 20,
+        "n_trials": 30,
         "p_valid": 0.5,
     }
 

@@ -31,11 +31,9 @@ def test_wrong_types_are_detected(create_config):
             Config(**wrong_config)
 
 
-def test_probability_is_valid(create_config):
-    for p in range(1, 20):
-        create_config["p_valid"] = p / 10
-        if create_config["p_valid"] <= 1:
+def test_invalid_probabilities_are_detected(create_config):
+    for p, n in zip([0.01, 0.1, -0.1, 0.4], [80, 9, 20, 20]):
+        create_config["p_valid"] = p
+        create_config["n_trials"] = n
+        with pytest.raises(ValidationError):
             Config(**create_config)
-        else:
-            with pytest.raises(ValidationError):
-                Config(**create_config)
