@@ -3,6 +3,7 @@ import json
 import random
 import csv
 import shutil
+import math
 from pathlib import Path
 from unittest.mock import patch
 from typing import Literal, Tuple, List, Union
@@ -39,7 +40,7 @@ class Config(BaseModel):
     @model_validator(mode="after")
     def conditions_can_be_divided_into_n_trials(values):
         p_min = min(values.p_valid, 1 - values.p_valid)
-        N = 1 / p_min
+        N = math.ceil(1 / p_min)
         assert values.n_trials % N == 0
         return values
 
