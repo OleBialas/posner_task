@@ -1,13 +1,40 @@
 import argparse
 import json
-import numbers
 import random
 import csv
 import shutil
 from pathlib import Path
 from unittest.mock import patch
-from typing import Literal, Tuple, List
+from typing import Literal, Tuple, List, Union
+from pydantic import BaseModel, field_validator, model_validator
 from psychopy import visual, core, event
+
+
+class Config(BaseModel):
+    root_dir: str
+    fix_dur: Union[int, float]
+    cue_dur: Union[int, float]
+    n_blocks: int
+    n_trials: int
+    p_valid: float
+
+    @field_validator("root_dir")
+    def root_dir_exists(self, value: str) -> Path:
+        root_dir = Path(value)
+        assert root_dir.exists()
+        return root_dir
+
+    @field_validator("p_valid")
+    def p_valid_is_percentage(self, value: float) -> float:
+        assert 0 <= value <= 1
+        return value
+
+    @model_validator(mode="after")
+    def conditions_can_be_divided_into_n_trials(self):
+        p_min = min(self.p_valid, 1 - self.p_valid)
+        N = 1 / p_min
+        assert self.n_trials % N == 0
+        return self
 
 
 def test_experiment(subject_id: int, config: str, overwrite: bool = False):
@@ -185,62 +212,11 @@ def create_subject_dir(root: Path, subject_id: int, overwrite: bool) -> Path:
     return subject_dir
 
 
-def load_config(config_file: str) -> Tuple[Path, float, float, int, int, float]:
-    config_dict = _read_config(config_file)
-    return _check_config_dict(config_dict)
-
-
-def _read_config(config_file: str) -> dict:
+def load_config(config_file: str) -> Config:
     if not Path(config_file).exists():
         raise FileNotFoundError(f"Couldn't find config file at {config_file}")
     config_dict = json.load(open(config_file))
-    return config_dict
-
-
-def _check_config_dict(config_dict: dict) -> Tuple[Path, float, float, int, int, float]:
-
-    for key in ["root", "fix_dur", "cue_dur", "n_blocks", "n_trials", "p_valid"]:
-        if not key in config_dict.keys():
-            raise KeyError(f"Config file does not contain {key}!")
-
-    root = Path(config_dict["root"])
-    if not root.exists():
-        raise FileNotFoundError(
-            f"Couldn't find root directory {root}. Create it or edit the configuration!"
-        )
-
-    if not (
-        all(
-            [
-                isinstance(config_dict[key], numbers.Number)
-                for key in ["fix_dur", "cue_dur"]
-            ]
-        )
-        and all([config_dict[key] > 0 for key in ["fix_dur", "cue_dur"]])
-    ):
-        raise TypeError("fix_dur and cue_dur must be positive scalar values!")
-
-    fix_dur, cue_dur = float(config_dict["fix_dur"]), float(config_dict["cue_dur"])
-
-    if not all([isinstance(config_dict[key], int) for key in ["n_blocks", "n_trials"]]):
-        raise TypeError("n_blocks and n_trials must be integers!")
-    n_blocks, n_trials = config_dict["n_blocks"], config_dict["n_trials"]
-
-    if not isinstance(config_dict["p_valid"], float):
-        raise TypeError("p_valid must be a float!")
-
-    if not 1 >= config_dict["p_valid"] > 0:
-        raise ValueError("p_calid must be a value between 0 and 1!")
-    p_valid = config_dict["p_valid"]
-
-    try:
-        make_sequence(n_trials, p_valid)
-    except ValueError:
-        raise ValueError(
-            f"Can't generate sequence with n_trials={n_trials} and p_valid={p_valid}"
-        )
-
-    return (root, fix_dur, cue_dur, n_blocks, n_trials, p_valid)
+    return Config(**config_dict)
 
 
 def write_csv(
