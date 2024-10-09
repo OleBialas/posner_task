@@ -31,6 +31,12 @@ class Config(BaseModel):
         assert 0 <= value <= 1
         return value
 
+    @field_validator("fix_dur", "cue_dur")
+    @staticmethod
+    def durations_are_positive(value: Union[int, float]) -> float:
+        assert 0 <= value <= 1
+        return float(value)
+
     @model_validator(mode="after")
     def conditions_can_be_divided_into_n_trials(values):
         p_min = min(values.p_valid, 1 - values.p_valid)

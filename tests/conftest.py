@@ -9,7 +9,7 @@ from posner.experiment import create_subject_dir
 @pytest.fixture
 def create_config():
     return {
-        "root": "",
+        "root_dir": "",
         "fix_dur": 0.1,
         "cue_dur": 0.2,
         "n_blocks": 1,
