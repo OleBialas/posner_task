@@ -11,7 +11,7 @@ from psychopy import visual, core, event
 
 
 class Config(BaseModel):
-    root_dir: str
+    root_dir: Path
     fix_dur: Union[int, float]
     cue_dur: Union[int, float]
     n_blocks: int
@@ -20,10 +20,9 @@ class Config(BaseModel):
 
     @field_validator("root_dir")
     @staticmethod
-    def root_dir_exists(value: str) -> Path:
-        root_dir = Path(value)
-        assert root_dir.exists()
-        return root_dir
+    def root_dir_exists(value: Path) -> Path:
+        assert value.exists()
+        return value
 
     @field_validator("p_valid")
     @staticmethod
@@ -59,22 +58,20 @@ def test_experiment(subject_id: int, config: str, overwrite: bool = False):
     shutil.rmtree(sub_dir)
 
 
-def run_experiment(subject_id: int, config: str, overwrite: bool = False):
+def run_experiment(subject_id: int, config_file: str, overwrite: bool = False):
 
-    root, fix_dur, cue_dur, n_blocks, n_trials, p_valid = load_config(config)
-    subject_dir = create_subject_dir(root, subject_id, overwrite)
+    config = load_config(config_file)
+    subject_dir = create_subject_dir(config.root_dir, subject_id, overwrite)
     win = visual.Window(fullscr=True)
     clock = core.Clock()
 
     draw_text(win, "hello")
     event.waitKeys(keyList=["space"])
 
-    for i_block in range(n_blocks):
-        draw_text(win, f"block {i_block+1} of {n_blocks}")
+    for i_block in range(config.n_blocks):
+        draw_text(win, f"block {i_block+1} of {config.n_blocks}")
         event.waitKeys(keyList=["space"])
-        side, valid, response, response_time = run_block(
-            win, clock, n_trials, p_valid, fix_dur, cue_dur
-        )
+        side, valid, response, response_time = run_block(win, clock, config)
         _ = write_csv(subject_dir, i_block, side, valid, response, response_time)
 
     draw_text(win, "goodbye")
@@ -86,10 +83,7 @@ def run_experiment(subject_id: int, config: str, overwrite: bool = False):
 def run_block(
     win: visual.Window,
     clock: core.Clock,
-    n_trials: int,
-    p_valid: float,
-    fix_dur: float,
-    cue_dur: float,
+    config: Config,
 ) -> Tuple[
     List[Literal["left", "right"]],
     List[bool],
@@ -97,10 +91,10 @@ def run_block(
     List[float],
 ]:
 
-    side, valid = make_sequence(n_trials, p_valid)
+    side, valid = make_sequence(config.n_trials, config.p_valid)
     response, response_time = [], []
     for s, v in zip(side, valid):
-        r, rt = run_trial(win, clock, s, v, fix_dur, cue_dur)
+        r, rt = run_trial(win, clock, s, v, config.fix_dur, config.cue_dur)
         response.append(r)
         response_time.append(rt)
     return side, valid, response, response_time

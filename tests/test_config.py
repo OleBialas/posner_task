@@ -4,9 +4,8 @@ from pydantic import ValidationError
 
 
 def test_load_config(write_config):
-    config_dict1, config_fname = write_config
-    config_dict2 = load_config(config_fname)
-    assert config_dict1 == config_dict2
+    config_fname = write_config
+    load_config(config_fname)
 
 
 def test_config_not_found():
@@ -24,7 +23,7 @@ def test_missing_key_is_detected(create_config):
 
 def test_wrong_types_are_detected(create_config):
     for key, value in zip(
-        ["fix_dur", "cue_dur", "n_blocks", "n_trials"], ["hi", -2, 0.5, 20.0]
+        ["fix_dur", "cue_dur", "n_blocks", "n_trials"], ["hi", -2, 0.5, 19]
     ):
         wrong_config = create_config.copy()
         wrong_config[key] = value

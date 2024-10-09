@@ -22,7 +22,7 @@ def create_config():
 def write_config(create_config, tmpdir):
     config_fname = os.path.join(tmpdir, "sample_config.json")
     json.dump(create_config, open(config_fname, "w"))
-    yield create_config, config_fname
+    yield config_fname
 
 
 @pytest.fixture
