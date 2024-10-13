@@ -1,6 +1,7 @@
 import os
 import json
 from unittest import mock
+import random
 import pytest
 from psychopy import visual
 from posner.experiment import create_subject_dir
@@ -13,7 +14,7 @@ def create_config():
         "fix_dur": 0.1,
         "cue_dur": 0.2,
         "n_blocks": 1,
-        "n_trials": 30,
+        "n_trials": 20,
         "p_valid": 0.5,
     }
 
@@ -35,6 +36,7 @@ def create_temp_subject_dir(tmpdir):
 def mock_window():
     with mock.patch.object(visual, "Window") as MockWin:
         MockWin.flip.return_value = None
+        MockWin.aspect = 2
         yield MockWin
 
 
@@ -45,6 +47,19 @@ def mock_circle():
 
 
 @pytest.fixture
+def mock_rect():
+    with mock.patch.object(visual, "Rect") as MockRect:
+        yield MockRect
+
+
+@pytest.fixture
 def mock_text():
     with mock.patch.object(visual, "TextStim") as MockText:
         yield MockText
+
+
+@pytest.fixture
+def mock_waitKeys():
+    with mock.patch("posner.experiment.event.waitKeys") as mock_waitKeys:
+        mock_waitKeys.side_effect = lambda keyList: [random.choice(keyList)]
+        yield mock_waitKeys

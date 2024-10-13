@@ -1,13 +1,13 @@
 import argparse
 import json
 import random
-import csv
 import shutil
 import math
 from pathlib import Path
 from unittest.mock import patch
 from typing import Literal, Tuple, List, Union
 from pydantic import BaseModel, field_validator, model_validator
+import pandas as pd
 from psychopy import visual, core, event
 
 
@@ -72,8 +72,8 @@ def run_experiment(subject_id: int, config_file: str, overwrite: bool = False):
     for i_block in range(config.n_blocks):
         draw_text(win, f"block {i_block+1} of {config.n_blocks}")
         event.waitKeys(keyList=["space"])
-        side, valid, response, response_time = run_block(win, clock, config)
-        _ = write_csv(subject_dir, i_block, side, valid, response, response_time)
+        df = run_block(win, clock, config)
+        df.to_csv(subject_dir, index=False)
 
     draw_text(win, "goodbye")
     event.waitKeys(keyList=["space"])
@@ -85,20 +85,17 @@ def run_block(
     win: visual.Window,
     clock: core.Clock,
     config: Config,
-) -> Tuple[
-    List[Literal["left", "right"]],
-    List[bool],
-    List[Literal["left", "right"]],
-    List[float],
-]:
+) -> pd.DataFrame:
 
     side, valid = make_sequence(config.n_trials, config.p_valid)
-    response, response_time = [], []
+    df = pd.DataFrame()
     for s, v in zip(side, valid):
         r, rt = run_trial(win, clock, s, v, config.fix_dur, config.cue_dur)
-        response.append(r)
-        response_time.append(rt)
-    return side, valid, response, response_time
+        row = pd.DataFrame(
+            [{"side": s, "valid": v, "response": r, "response_time": rt}]
+        )
+        df = pd.concat([df, row])
+    return df
 
 
 def run_trial(
@@ -167,7 +164,7 @@ def draw_frames(win: visual.Window, highlight: Literal["left", "right", None]) -
 
 def draw_fixation(win: visual.Window) -> None:
     fixation = visual.Circle(
-        win, radius=0.01, size=(1 * 1 / win.aspect, 1), fillColor="white"
+        win, radius=0.01, size=(1 / win.aspect, 1), fillColor="white"
     )
     fixation.draw()
 
@@ -181,7 +178,7 @@ def draw_stimulus(win: visual.Window, side: Literal["left", "right"]) -> None:
         win,
         pos=[x_pos, 0],
         radius=0.02,
-        size=(1 * 1 / win.aspect, 1),
+        size=(1 / win.aspect, 1),
         fillColor="black",
         lineColor=None,
     )
@@ -220,24 +217,6 @@ def load_config(config_file: str) -> Config:
         raise FileNotFoundError(f"Couldn't find config file at {config_file}")
     config_dict = json.load(open(config_file))
     return Config(**config_dict)
-
-
-def write_csv(
-    subject_dir: Path,
-    i_block: int,
-    side: List[Literal["left", "right"]],
-    valid: List[bool],
-    response: List[Literal["left", "right"]],
-    response_time: List[float],
-) -> Path:
-
-    file_path = subject_dir / f"{subject_dir.name}_block{i_block+1}.csv"
-    rows = zip(side, valid, response, response_time)
-    with open(file_path, "w", newline="") as csvfile:
-        csvwriter = csv.writer(csvfile)
-        csvwriter.writerow(["side", "valid", "response", "response_time"])
-        csvwriter.writerows(rows)
-    return file_path
 
 
 def main_cli():
