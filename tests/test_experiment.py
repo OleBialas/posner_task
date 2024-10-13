@@ -26,7 +26,5 @@ def test_run_block(create_config, mock_window, mock_circle, mock_rect, mock_wait
     config.fix_dur, config.cue_dur = 0.01, 0.01
     clock = core.Clock()
     df = run_block(mock_window, clock, config)
-    print(df)
-    print(type(df))
-    assert df[0].shape[0] == config.n_trials
-    # assert df["side"].isin(["left", "right"]).all()
+    assert df.shape[0] == config.n_trials
+    assert df["side"].isin(["left", "right"]).all()
