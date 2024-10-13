@@ -73,7 +73,7 @@ def run_experiment(subject_id: int, config_file: str, overwrite: bool = False):
         draw_text(win, f"block {i_block+1} of {config.n_blocks}")
         event.waitKeys(keyList=["space"])
         df = run_block(win, clock, config)
-        df.to_csv(subject_dir, index=False)
+        df.to_csv(subject_dir / f"block_{i_block+1}.csv", index=False)
 
     draw_text(win, "goodbye")
     event.waitKeys(keyList=["space"])

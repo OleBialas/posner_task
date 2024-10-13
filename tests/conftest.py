@@ -11,8 +11,8 @@ from posner.experiment import create_subject_dir
 def create_config():
     return {
         "root_dir": "",
-        "fix_dur": 0.1,
-        "cue_dur": 0.2,
+        "fix_dur": 0.01,
+        "cue_dur": 0.01,
         "n_blocks": 1,
         "n_trials": 20,
         "p_valid": 0.5,
@@ -20,15 +20,16 @@ def create_config():
 
 
 @pytest.fixture
-def write_config(create_config, tmpdir):
-    config_fname = os.path.join(tmpdir, "sample_config.json")
+def write_config(create_config, tmp_path):
+    create_config["root_dir"] = str(tmp_path)
+    config_fname = os.path.join(tmp_path, "sample_config.json")
     json.dump(create_config, open(config_fname, "w"))
     yield config_fname
 
 
 @pytest.fixture
-def create_temp_subject_dir(tmpdir):
-    subject_dir = create_subject_dir(tmpdir, 1, False)
+def create_temp_subject_dir(tmp_path):
+    subject_dir = create_subject_dir(tmp_path, 1, False)
     return subject_dir
 
 
