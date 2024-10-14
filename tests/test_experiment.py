@@ -1,12 +1,6 @@
+from pathlib import Path
 import time
-from posner.experiment import (
-    run_trial,
-    run_block,
-    run_experiment,
-    load_config,
-    create_subject_dir,
-    Config,
-)
+from posner.experiment import run_trial, run_block, run_experiment, load_config, Config
 from psychopy import core
 
 WAITKEY_CALL_PER_TRIAL = 1
@@ -36,7 +30,32 @@ def test_run_block_calls(
 def test_run_experiment_calls(
     write_config, mock_window, mock_circle, mock_rect, mock_text, mock_waitKeys
 ):
+    config = load_config(write_config)
     run_experiment(1, write_config)
+
+    assert (
+        mock_waitKeys.call_count
+        == WAITKEY_CALL_PER_TRIAL * config.n_trials * config.n_blocks
+        + config.n_blocks
+        + 2
+    )
+    assert (
+        mock_circle.call_count
+        == CIRCLE_CALL_PER_TRIAL * config.n_trials * config.n_blocks
+    )
+    assert (
+        mock_rect.call_count == RECT_CALL_PER_TRIAL * config.n_trials * config.n_blocks
+    )
+    assert mock_text.call_count == config.n_blocks + 2
+
+
+def test_run_experiment_writes_files(
+    write_config, mock_window, mock_circle, mock_rect, mock_text, mock_waitKeys
+):
+    config = load_config(write_config)
+    run_experiment(1, write_config)
+    files = list(Path(config.root_dir).glob("data/*/*"))
+    assert len(files) == config.n_blocks
 
 
 def test_trial_timing(mock_window, mock_circle, mock_rect, mock_waitKeys):

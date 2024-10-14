@@ -13,7 +13,7 @@ def create_config():
         "root_dir": "",
         "fix_dur": 0.01,
         "cue_dur": 0.01,
-        "n_blocks": 1,
+        "n_blocks": 2,
         "n_trials": 20,
         "p_valid": 0.5,
     }
