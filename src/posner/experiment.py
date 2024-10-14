@@ -11,6 +11,16 @@ import pandas as pd
 from psychopy import visual, core, event
 
 
+class Coordinates(BaseModel):
+    left: Tuple[float, float]
+    right: Tuple[float, float]
+
+    @model_validator(mode="after")
+    def sides_are_correct(values):
+        assert values.left[0] < values.right[0]
+        return values
+
+
 class Config(BaseModel):
     root_dir: Path
     fix_dur: Union[int, float]
@@ -18,6 +28,7 @@ class Config(BaseModel):
     n_blocks: int
     n_trials: int
     p_valid: float
+    coordinates: Coordinates
 
     @field_validator("root_dir")
     @staticmethod
