@@ -8,9 +8,11 @@ CIRCLE_CALL_PER_TRIAL = 3
 RECT_CALL_PER_TRIAL = 6
 
 
-def test_run_trial_calls(mock_window, mock_circle, mock_rect, mock_waitKeys):
+def test_run_trial_calls(
+    mock_window, mock_circle, mock_rect, mock_waitKeys, create_config
+):
     clock = core.Clock()
-    run_trial(mock_window, clock, side="left", valid=True, fix_dur=0, cue_dur=0)
+    run_trial(mock_window, clock, side="left", valid=True, config=create_config)
     assert mock_waitKeys.call_count == WAITKEY_CALL_PER_TRIAL
     assert mock_circle.call_count == CIRCLE_CALL_PER_TRIAL
     assert mock_rect.call_count == RECT_CALL_PER_TRIAL
@@ -19,12 +21,11 @@ def test_run_trial_calls(mock_window, mock_circle, mock_rect, mock_waitKeys):
 def test_run_block_calls(
     create_config, mock_window, mock_circle, mock_rect, mock_waitKeys
 ):
-    config = Config(**create_config)
     clock = core.Clock()
-    _ = run_block(mock_window, clock, config)
-    assert mock_waitKeys.call_count == WAITKEY_CALL_PER_TRIAL * config.n_trials
-    assert mock_circle.call_count == CIRCLE_CALL_PER_TRIAL * config.n_trials
-    assert mock_rect.call_count == RECT_CALL_PER_TRIAL * config.n_trials
+    _ = run_block(mock_window, clock, create_config)
+    assert mock_waitKeys.call_count == WAITKEY_CALL_PER_TRIAL * create_config.n_trials
+    assert mock_circle.call_count == CIRCLE_CALL_PER_TRIAL * create_config.n_trials
+    assert mock_rect.call_count == RECT_CALL_PER_TRIAL * create_config.n_trials
 
 
 def test_run_experiment_calls(
@@ -58,24 +59,22 @@ def test_run_experiment_writes_files(
     assert len(files) == config.n_blocks
 
 
-def test_trial_timing(mock_window, mock_circle, mock_rect, mock_waitKeys):
-    fix_dur, cue_dur = 0, 0
+def test_trial_timing(
+    create_config, mock_window, mock_circle, mock_rect, mock_waitKeys
+):
     tic = time.time()
     clock = core.Clock()
-    run_trial(
-        mock_window, clock, side="left", valid=True, fix_dur=fix_dur, cue_dur=cue_dur
-    )
+    run_trial(mock_window, clock, side="left", valid=True, config=create_config)
     elapsed = time.time() - tic
-    assert abs(elapsed - (fix_dur + cue_dur)) < 0.005
+    assert abs(elapsed - (create_config.fix_dur + create_config.cue_dur)) < 0.01
 
 
 def test_block_data_is_valid(
     create_config, mock_window, mock_circle, mock_rect, mock_waitKeys
 ):
-    config = Config(**create_config)
     clock = core.Clock()
-    df = run_block(mock_window, clock, config)
-    assert df.shape[0] == config.n_trials
+    df = run_block(mock_window, clock, create_config)
+    assert df.shape[0] == create_config.n_trials
     assert df["side"].isin(["left", "right"]).all()
     assert df["valid"].isin([True, False]).all()
     assert df["response"].isin(["left", "right"]).all()

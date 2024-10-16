@@ -4,26 +4,34 @@ from unittest import mock
 import random
 import pytest
 from psychopy import visual
-from posner.experiment import create_subject_dir
+from posner.experiment import create_subject_dir, Config
 
 
 @pytest.fixture
-def create_config():
+def config_dict():
     return {
         "root_dir": "",
         "fix_dur": 0.01,
         "cue_dur": 0.01,
+        "fix_radius": 0.1,
+        "stim_radius": 0.2,
         "n_blocks": 2,
         "n_trials": 20,
         "p_valid": 0.5,
+        "pos": {"left": (-0.5, 0), "right": (0.5, 0)},
     }
 
 
 @pytest.fixture
-def write_config(create_config, tmp_path):
-    create_config["root_dir"] = str(tmp_path)
+def create_config(config_dict):
+    return Config(**config_dict)
+
+
+@pytest.fixture
+def write_config(config_dict, tmp_path):
+    config_dict["root_dir"] = str(tmp_path)
     config_fname = os.path.join(tmp_path, "sample_config.json")
-    json.dump(create_config, open(config_fname, "w"))
+    json.dump(config_dict, open(config_fname, "w"))
     yield config_fname
 
 

@@ -5,13 +5,13 @@ import shutil
 import math
 from pathlib import Path
 from unittest.mock import patch
-from typing import Literal, Tuple, List, Union
+from typing import Literal, Tuple, List, Union, Optional
 from pydantic import BaseModel, field_validator, model_validator
 import pandas as pd
 from psychopy import visual, core, event
 
 
-class Coordinates(BaseModel):
+class Pos(BaseModel):
     left: Tuple[float, float]
     right: Tuple[float, float]
 
@@ -25,10 +25,12 @@ class Config(BaseModel):
     root_dir: Path
     fix_dur: Union[int, float]
     cue_dur: Union[int, float]
+    fix_radius: float
+    stim_radius: float
     n_blocks: int
     n_trials: int
     p_valid: float
-    coordinates: Coordinates
+    pos: Pos
 
     @field_validator("root_dir")
     @staticmethod
@@ -101,7 +103,7 @@ def run_block(
     side, valid = make_sequence(config.n_trials, config.p_valid)
     df = pd.DataFrame()
     for s, v in zip(side, valid):
-        r, rt = run_trial(win, clock, s, v, config.fix_dur, config.cue_dur)
+        r, rt = run_trial(win, clock, s, v, config)
         row = pd.DataFrame(
             [{"side": s, "valid": v, "response": r, "response_time": rt}]
         )
@@ -114,27 +116,26 @@ def run_trial(
     clock: core.Clock,
     side: Literal["left", "right"],
     valid: bool,
-    fix_dur: float,
-    cue_dur: float,
+    config: Config,
 ) -> Tuple[bool, float]:
 
-    draw_frames(win, highlight=None)
-    draw_fixation(win)
+    draw_frames(win, config)
+    draw_fixation(win, config)
     win.flip()
 
-    core.wait(fix_dur)
+    core.wait(config.fix_dur)
 
-    draw_frames(win, highlight=None)
-    draw_fixation(win)
+    draw_frames(win, config)
+    draw_fixation(win, config)
     if (side == "left" and valid) or (side == "right" and not valid):
-        draw_frames(win, highlight="left")
+        draw_frames(win, config, highlight="left")
     else:
-        draw_frames(win, highlight="right")
+        draw_frames(win, config, highlight="right")
     win.flip()
 
-    core.wait(cue_dur)
+    core.wait(config.cue_dur)
 
-    draw_stimulus(win, side)
+    draw_stimulus(win, config, side)
     win.flip()
     clock.reset()
 
@@ -151,7 +152,6 @@ def make_sequence(
     side, valid = [], []
     if n_trials / 2 * p_valid % 1 != 0:
         raise ValueError("Trials can't be evenly divided between conditions!")
-
     for s in ["left", "right"]:
         n = int(n_trials / 2)
         side += [s] * n
@@ -163,32 +163,38 @@ def make_sequence(
     return [side[i] for i in idx], [valid[i] for i in idx]
 
 
-def draw_frames(win: visual.Window, highlight: Literal["left", "right", None]) -> None:
-    for side, x_pos in zip(["left", "right"], [-0.5, 0.5]):
+def draw_frames(
+    win: visual.Window,
+    config: Config,
+    highlight: Optional[Literal["left", "right"]] = None,
+) -> None:
+    for side, pos in zip(["left", "right"], [config.pos.left, config.pos.right]):
         if side == highlight:
             color = "red"
         else:
             color = "white"
-        frame = visual.Rect(win, lineColor=color, pos=(x_pos, 0))
+        frame = visual.Rect(win, lineColor=color, pos=pos)
         frame.draw()
 
 
-def draw_fixation(win: visual.Window) -> None:
+def draw_fixation(win: visual.Window, config: Config) -> None:
     fixation = visual.Circle(
-        win, radius=0.01, size=(1 / win.aspect, 1), fillColor="white"
+        win, radius=config.fix_radius, size=(1 / win.aspect, 1), fillColor="white"
     )
     fixation.draw()
 
 
-def draw_stimulus(win: visual.Window, side: Literal["left", "right"]) -> None:
+def draw_stimulus(
+    win: visual.Window, config: Config, side: Literal["left", "right"]
+) -> None:
     if side == "left":
-        x_pos = -0.5
+        pos = config.pos.left
     elif side == "right":
-        x_pos = 0.5
+        pos = config.pos.right
     stimulus = visual.Circle(
         win,
-        pos=[x_pos, 0],
-        radius=0.02,
+        pos=pos,
+        radius=config.stim_radius,
         size=(1 / win.aspect, 1),
         fillColor="black",
         lineColor=None,
