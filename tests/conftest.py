@@ -11,13 +11,15 @@ from posner.experiment import create_subject_dir, Config
 def config_dict():
     return {
         "root_dir": "",
-        "fix_dur": 0.01,
-        "cue_dur": 0.01,
-        "fix_radius": 0.1,
-        "stim_radius": 0.2,
+        "fix_dur": 0.5,
+        "cue_dur": 0.5,
+        "fix_radius": 0.025,
+        "fix_color": "white",
+        "stim_radius": 0.05,
+        "stim_color":"red",
         "n_blocks": 2,
-        "n_trials": 20,
-        "p_valid": 0.5,
+        "n_trials": 10,
+        "p_valid": 0.8,
         "pos": {"left": (-0.5, 0), "right": (0.5, 0)},
     }
 
