@@ -54,9 +54,7 @@ class Config(BaseModel):
 
     @model_validator(mode="after")
     def conditions_can_be_divided_into_n_trials(values):
-        p_min = min(values.p_valid, 1 - values.p_valid)
-        N = math.ceil(1 / p_min)
-        assert values.n_trials % N == 0
+        assert n_trials / 2 * p_valid % 1 == 0
         return values
 
 
@@ -153,8 +151,6 @@ def make_sequence(
     n_trials: int, p_valid: float
 ) -> Tuple[List[Literal["left", "right"]], List[bool]]:
     side, valid = [], []
-    if n_trials / 2 * p_valid % 1 != 0:
-        raise ValueError("Trials can't be evenly divided between conditions!")
     for s in ["left", "right"]:
         n = int(n_trials / 2)
         side += [s] * n
