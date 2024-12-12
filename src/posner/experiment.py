@@ -26,7 +26,9 @@ class Config(BaseModel):
     fix_dur: Union[int, float]
     cue_dur: Union[int, float]
     fix_radius: float
+    fix_color: str
     stim_radius: float
+    stim_color: str
     n_blocks: int
     n_trials: int
     p_valid: float
@@ -179,7 +181,7 @@ def draw_frames(
 
 def draw_fixation(win: visual.Window, config: Config) -> None:
     fixation = visual.Circle(
-        win, radius=config.fix_radius, size=(1 / win.aspect, 1), fillColor="white"
+        win, radius=config.fix_radius, size=(1 / win.aspect, 1), fillColor=config.fix_color
     )
     fixation.draw()
 
@@ -196,7 +198,7 @@ def draw_stimulus(
         pos=pos,
         radius=config.stim_radius,
         size=(1 / win.aspect, 1),
-        fillColor="black",
+        fillColor=config.stim_color,
         lineColor=None,
     )
     stimulus.draw()
