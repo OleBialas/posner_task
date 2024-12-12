@@ -79,16 +79,16 @@ def run_experiment(subject_id: int, config_file: str, overwrite: bool = False):
     win = visual.Window(fullscr=True)
     clock = core.Clock()
 
-    draw_text(win, "hello")
+    draw_text(win, "hello", config)
     event.waitKeys(keyList=["space"])
 
     for i_block in range(config.n_blocks):
-        draw_text(win, f"block {i_block+1} of {config.n_blocks}")
+        draw_text(win, f"block {i_block+1} of {config.n_blocks}", config)
         event.waitKeys(keyList=["space"])
         df = run_block(win, clock, config)
         df.to_csv(subject_dir / f"block_{i_block+1}.csv", index=False)
 
-    draw_text(win, "goodbye")
+    draw_text(win, "goodbye", config)
     event.waitKeys(keyList=["space"])
 
     win.close()
@@ -169,7 +169,7 @@ def draw_frames(
 ) -> None:
     for side, pos in zip(["left", "right"], [config.pos.left, config.pos.right]):
         if side == highlight:
-            color = "red"
+            color = config.stim_color
         else:
             color = "white"
         frame = visual.Rect(win, lineColor=color, pos=pos)
@@ -201,9 +201,9 @@ def draw_stimulus(
     stimulus.draw()
 
 
-def draw_text(win: visual.Window, message: str) -> None:
+def draw_text(win: visual.Window, message: str, config:Config) -> None:
     if message == "hello":
-        text = "Welcome to the experiment! \n \n Look at the white fixation point in the middle of the screen. \n \n When a black dot appears, indicate if it is on the left or right using the arrow keys. \n \n Respond as fast as possible! \n \n Press space to continue"
+        text = f"Welcome to the experiment! \n \n Look at the white fixation point in the middle of the screen. \n \n When a {config.stim_color} dot appears, indicate if it is on the left or right using the arrow keys. \n \n Respond as fast as possible! \n \n Press space to continue"
     elif message == "goodbye":
         text = "Thank you for participating! \n \n Press space to exit."
     else:
