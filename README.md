@@ -1,9 +1,9 @@
 # Posner
 
-This is an implementation of the Posner attention cueing task [^1] implemented using the Psychopy software package.
+This is an implementation of the Posner attention cueing task [^1] implemented using the PsychoPy software package.
 
 ## Installation
-Because Psychopy has a lot of dependencies, it is recommended to install the package into a new environment using Python version 3.8 (this package does not require a specific version but Psychopy is does).
+It is recommended to install the package into a new environment using Python version 3.10 (this package does not require a specific version but it depends on PsychoPy which does).
 
 For example, using conda
 ```sh
@@ -16,7 +16,7 @@ The experiment can be installed using `pip`
 pip install git+https://github.com/OleBialas/posner_task.git
 ```
 
-If you are experiencing any issues this is most likely due to the installation of Psychopy - consult their [install documentation](https://www.psychopy.org/download.html)
+If you are experiencing any issues this is most likely due to the installation of PsychoPy - consult their [install documentation](https://www.psychopy.org/download.html)
 
 ## Run experiment
 
@@ -32,20 +32,29 @@ posner 3 config.json
 The configuration file is written in the JSON format and looks like this:
 ```json
 {
-    "root": "",
-    "fix_dur": 0.75,
-    "cue_dur": 0.5,
-    "n_trials": 20,
-    "n_blocks": 2,
-    "p_valid": 0.8
+"root_dir": "",
+"fix_dur": 0.01,
+"cue_dur": 0.01,
+"fix_radius": 0.1,
+"stim_radius": 0.2,
+"n_blocks": 5,
+"n_trials": 20,
+"p_valid": 0.5,
+"pos": {"left": (-0.5, 0), "right": (0.5, 0)},
 }
+
 ```
-- `root `is the directory where the experimental results are saved
+- `root `is the directory where the experimental results are saved (a data new subdirectory `data` will be created
 - `fix_dur` is the duration the fixation point is displayed (in seconds)
 - `cue_dur` is the duration the cue before the stimulus is displayed (in seconds)
+- `fix_radius`: is the radius of the fixation point
+- `stim_radius`: is the radius of the stimulus point
 - `n_trials` is the number of trials per block
 - `n_blocks` is the number of blocks
 - `p_valid` is the percentage of trials where the cue is valid (i.e. correctly indicates the stimulus' location)
+- `pos` contains the x and y coordinates for visual elements on the left and right side
+
+Positions and sizes are defined in PsychoPy's [normlaized units](https://www.psychopy.org/general/units.html#normalised-units)
 
 ### Data storage
 The program will create a folder for the given subject ID in the root directory and store the results using one CSV file per block.
