@@ -12,8 +12,8 @@ from psychopy import visual, core, event
 
 
 class Pos(BaseModel):
-    left: Tuple[float, float]
-    right: Tuple[float, float]
+    left: List[float, float]
+    right: List[float, float]
 
     @model_validator(mode="after")
     def sides_are_correct(values):
