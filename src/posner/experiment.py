@@ -237,9 +237,9 @@ def load_config(config_file: str) -> Config:
 
 
 def main_cli():
-    parser = argparse.ArgumentParser(description="A Python implementation of the Posner attention cueing task built on PsychoPy)
+    parser = argparse.ArgumentParser(description="A Python implementation of the Posner attention cueing task built on PsychoPy")
     parser.add_argument("subject_id", type=int, help="Subject ID used to name files and folders")
-    parser.add_argument("config", type=str, help="Path to the JSON file with the experiments configuration)
+    parser.add_argument("config", type=str, help="Path to the JSON file with the experiments configuration")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite existing data for this subject")
     parser.add_argument("--test", action="store_true", help="Run an automated test of the experiment")
     args = parser.parse_args()
