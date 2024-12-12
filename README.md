@@ -32,18 +32,17 @@ posner 3 config.json
 The configuration file is written in the JSON format and looks like this:
 ```json
 {
-  "root_dir": "",
-  "fix_dur": 0.01,
-  "cue_dur": 0.01,
-  "fix_radius": 0.1,
-  "stim_radius": 0.2,
-  "n_blocks": 5,
-  "n_trials": 20,
-  "p_valid": 0.5,
-  "pos": {
-    "left": [-0.5, 0],
-    "right": [0.5, 0]
-  }
+    "root_dir": "",
+    "fix_dur": 0.5,
+    "cue_dur": 0.5,
+    "fix_radius": 0.025,
+    "fix_color": "white",
+    "stim_radius": 0.05,
+    "stim_color": "red",
+    "n_blocks": 2,
+    "n_trials": 10,
+    "p_valid": 0.8,
+    "pos": {"left":  [-0.5, 0], "right": [0.5, 0]}
 }
 
 ```
@@ -51,7 +50,9 @@ The configuration file is written in the JSON format and looks like this:
 - `fix_dur` is the duration the fixation point is displayed (in seconds)
 - `cue_dur` is the duration the cue before the stimulus is displayed (in seconds)
 - `fix_radius`: is the radius of the fixation point
-- `stim_radius`: is the radius of the stimulus point
+- `fix_color` is the color of the fixation point
+- `stim_radius` is the radius of the stimulus point
+- `stim_color` is the color of the stimulus
 - `n_trials` is the number of trials per block
 - `n_blocks` is the number of blocks
 - `p_valid` is the percentage of trials where the cue is valid (i.e. correctly indicates the stimulus' location)
