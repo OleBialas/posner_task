@@ -32,15 +32,18 @@ posner 3 config.json
 The configuration file is written in the JSON format and looks like this:
 ```json
 {
-"root_dir": "",
-"fix_dur": 0.01,
-"cue_dur": 0.01,
-"fix_radius": 0.1,
-"stim_radius": 0.2,
-"n_blocks": 5,
-"n_trials": 20,
-"p_valid": 0.5,
-"pos": {"left": (-0.5, 0), "right": (0.5, 0)},
+  "root_dir": "",
+  "fix_dur": 0.01,
+  "cue_dur": 0.01,
+  "fix_radius": 0.1,
+  "stim_radius": 0.2,
+  "n_blocks": 5,
+  "n_trials": 20,
+  "p_valid": 0.5,
+  "pos": {
+    "left": (-0.5, 0),
+    "right": (0.5, 0)
+  }
 }
 
 ```
