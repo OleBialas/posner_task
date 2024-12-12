@@ -41,8 +41,8 @@ The configuration file is written in the JSON format and looks like this:
   "n_trials": 20,
   "p_valid": 0.5,
   "pos": {
-    "left": (-0.5, 0),
-    "right": (0.5, 0)
+    "left": [-0.5, 0],
+    "right": [0.5, 0]
   }
 }
 
