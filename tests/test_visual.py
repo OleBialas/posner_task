@@ -20,11 +20,11 @@ def test_draw_frames(create_config, mock_window, mock_rect):
     assert colors == ["red", "white"]
 
 
-def test_draw_text(mock_window, mock_text):
+def test_draw_text(mock_window, mock_text, create_config):
     for msg, first_word in zip(
         ["hello", "goodbye", "block 1"], ["Welcome", "Thank", "Press"]
     ):
-        draw_text(mock_window, message=msg)
+        draw_text(mock_window, message=msg, config=create_config)
         _, kwargs = mock_text.call_args
         text = kwargs["text"].split(" ")
         assert text[0] == first_word

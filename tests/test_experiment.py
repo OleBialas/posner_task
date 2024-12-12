@@ -5,7 +5,7 @@ from psychopy import core
 
 WAITKEY_CALL_PER_TRIAL = 1
 CIRCLE_CALL_PER_TRIAL = 3
-RECT_CALL_PER_TRIAL = 6
+RECT_CALL_PER_TRIAL = 8
 
 
 def test_run_trial_calls(

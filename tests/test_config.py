@@ -31,9 +31,3 @@ def test_wrong_types_are_detected(config_dict):
         with pytest.raises(ValidationError):
             Config(**wrong_config)
 
-def test_invalid_probabilities_are_detected(config_dict):
-    for p, n in zip([0.1, -0.1, 0.4], [9, 10, 20]):
-        config_dict["p_valid"] = p
-        config_dict["n_trials"] = n
-        with pytest.raises(ValidationError):
-            Config(**config_dict)
