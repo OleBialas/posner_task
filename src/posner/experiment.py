@@ -137,6 +137,7 @@ def run_trial(
 
     core.wait(config.cue_dur)
 
+    draw_frames(win, config)
     draw_stimulus(win, config, side)
     win.flip()
     clock.reset()
