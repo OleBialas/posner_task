@@ -54,7 +54,7 @@ class Config(BaseModel):
 
     @model_validator(mode="after")
     def conditions_can_be_divided_into_n_trials(values):
-        assert n_trials / 2 * p_valid % 1 == 0
+        assert values.n_trials / 2 * values.p_valid % 1 == 0
         return values
 
 
