@@ -1,8 +1,6 @@
 import argparse
 import json
 import random
-import shutil
-import math
 from pathlib import Path
 from unittest.mock import patch
 from typing import Literal, Tuple, List, Union, Optional
@@ -66,11 +64,6 @@ def test_experiment(subject_id: int, config: str, overwrite: bool = False):
 
     with patch("posner.experiment.event.waitKeys", side_effect=mock_waitKeys):
         run_experiment(subject_id, config, overwrite)
-
-    # clean up
-    root = json.load(open(config))["root"]
-    sub_dir = Path(root) / "data" / f"sub-{str(subject_id).zfill(2)}"
-    shutil.rmtree(sub_dir)
 
 
 def run_experiment(subject_id: int, config_file: str, overwrite: bool = False):
