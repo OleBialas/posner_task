@@ -57,20 +57,20 @@ class Config(BaseModel):
         return values
 
 
-def test_experiment(subject_id: int, config: str, overwrite: bool = False):
+def test_experiment(subject_id: int, config: str, overwrite: bool = False, screen: int = 0):
 
     def mock_waitKeys(keyList):
         return [random.choice(keyList)]
 
     with patch("posner.experiment.event.waitKeys", side_effect=mock_waitKeys):
-        run_experiment(subject_id, config, overwrite)
+        run_experiment(subject_id, config, overwrite, screen)
 
 
-def run_experiment(subject_id: int, config_file: str, overwrite: bool = False):
+def run_experiment(subject_id: int, config_file: str, overwrite: bool = False, screen: int = 0):
 
     config = load_config(config_file)
     subject_dir = create_subject_dir(config.root_dir, subject_id, overwrite)
-    win = visual.Window(fullscr=True)
+    win = visual.Window(fullscr=True, screen=screen)
     clock = core.Clock()
 
     draw_text(win, "hello", config)
@@ -233,13 +233,14 @@ def main_cli():
     parser = argparse.ArgumentParser(description="A Python implementation of the Posner attention cueing task built on PsychoPy")
     parser.add_argument("subject_id", type=int, help="Subject ID used to name files and folders")
     parser.add_argument("config", type=str, help="Path to the JSON file with the experiments configuration")
+    parser.add_argument("--screen", type=int, default=0, help="Number of the screen where window is displayed (defaults to 0)")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite existing data for this subject")
     parser.add_argument("--test", action="store_true", help="Run an automated test of the experiment")
     args = parser.parse_args()
     if args.test is False:
-        run_experiment(args.subject_id, args.config, args.overwrite)
+        run_experiment(args.subject_id, args.config, args.overwrite, args.screen)
     else:
-        test_experiment(args.subject_id, args.config, args.overwrite)
+        test_experiment(args.subject_id, args.config, args.overwrite, args.screen)
 
 
 if __name__ == "__main__":
