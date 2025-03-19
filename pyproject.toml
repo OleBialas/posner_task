@@ -22,7 +22,9 @@ dependencies = [
     "psychopy",
     "pydantic",
     "watchdog",
-    "pandas"]
+    "pandas",
+    "pygame>=2.6.1",
+]
 
 [project.urls]
 Homepage = "https://github.com/OleBialas/posner_task"
