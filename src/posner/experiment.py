@@ -7,7 +7,7 @@ from typing import Literal, Tuple, List, Union, Optional
 from pydantic import BaseModel, field_validator, model_validator
 import pandas as pd
 from psychopy import visual, core, event
-
+import pygame
 
 class Pos(BaseModel):
     left: Tuple[float, float]
@@ -21,6 +21,7 @@ class Pos(BaseModel):
 
 class Config(BaseModel):
     root_dir: Path
+    input_method: Literal["Keyboard", "Controller"]
     fix_dur: Union[int, float]
     cue_dur: Union[int, float]
     fix_radius: float
@@ -31,6 +32,21 @@ class Config(BaseModel):
     n_trials: int
     p_valid: float
     pos: Pos
+
+    @field_validator("input_method")
+    @staticmethod
+    def check_controler_works(value: str) -> Union[str, pygame.joystick.JoystickType]:
+        if value == "Controller":
+            pygame.init()
+            pygame.joystick.init()
+            joystick_count = pygame.joystick.get_count()
+            if joystick_count == 0:
+                raise ValueError("No joystick detected")
+            joystick = pygame.joystick.Joystick(0)
+            joystick.init()
+            return joystick
+        else:
+            return value
 
     @field_validator("root_dir")
     @staticmethod
@@ -74,16 +90,16 @@ def run_experiment(subject_id: int, config_file: str, overwrite: bool = False, s
     clock = core.Clock()
 
     draw_text(win, "hello", config)
-    event.waitKeys(keyList=["space"])
+    wait_for_response(config, clock)
 
     for i_block in range(config.n_blocks):
         draw_text(win, f"block {i_block+1} of {config.n_blocks}", config)
-        event.waitKeys(keyList=["space"])
+        (config, clock)
         df = run_block(win, clock, config)
         df.to_csv(subject_dir / f"block_{i_block+1}.csv", index=False)
 
     draw_text(win, "goodbye", config)
-    event.waitKeys(keyList=["space"])
+    wait_for_response(config, clock)
 
     win.close()
 
@@ -132,14 +148,10 @@ def run_trial(
     draw_frames(win, config)
     draw_stimulus(win, config, side)
     win.flip()
-    clock.reset()
 
-    keys = event.waitKeys(keyList=["left", "right"])
-    response_time = clock.getTime()
-    response = keys[0]
+    response, response_time = wait_for_response(config, clock, keys=["left", "right"])
 
     return response, response_time
-
 
 def make_sequence(
     n_trials: int, p_valid: float
@@ -155,6 +167,29 @@ def make_sequence(
 
     return [side[i] for i in idx], [valid[i] for i in idx]
 
+def wait_for_response(
+        config:Config, clock:core.Clock, keys:Union[None, List[str]] = None
+) -> Tuple[str, float]:
+    clock.reset()
+    if config.input_method == "Keyboard":
+        keys = event.waitKeys(keyList=["left", "right"])
+        response = keys[0]
+    elif isinstance(config.input_method, pygame.joystick.JoystickType):
+        response = None
+        while response is None:
+            pygame.event.pump()
+            button_states = [
+                config.input_method.get_button(i) for i in range(config.input_method.get_numbuttons())
+            ]
+            if button_states[0]: # A button on 8BitDo
+                response = "right"
+            if button_states[4]:
+                response = "left" # Y button on 8BitDo
+    else:
+        raise ValueError("No valid input method found!")
+    response_time = clock.getTime()
+    print(response)
+    return response, response_time
 
 def draw_frames(
     win: visual.Window,
@@ -205,6 +240,7 @@ def draw_text(win: visual.Window, message: str, config:Config) -> None:
     text_stim = visual.TextStim(win, text=text)
     text_stim.draw()
     win.flip()
+    core.wait(1)
 
 
 def create_subject_dir(root: Path, subject_id: int, overwrite: bool) -> Path:
