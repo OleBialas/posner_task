@@ -22,6 +22,7 @@ class Pos(BaseModel):
 class Config(BaseModel):
     root_dir: Path
     input_method: Literal["Keyboard", "Controller"]
+    max_wait: Union[int, float]
     fix_dur: Union[int, float]
     cue_dur: Union[int, float]
     fix_radius: float
@@ -73,7 +74,7 @@ class Config(BaseModel):
         return values
 
 
-def test_experiment(subject_id: int, config: str, overwrite: bool = False, screen: int = 0):
+def test_experiment(subject_id: str, config: str, overwrite: bool = False, screen: int = 0):
 
     def mock_waitKeys(keyList):
         return [random.choice(keyList)]
@@ -82,7 +83,7 @@ def test_experiment(subject_id: int, config: str, overwrite: bool = False, scree
         run_experiment(subject_id, config, overwrite, screen)
 
 
-def run_experiment(subject_id: int, config_file: str, overwrite: bool = False, screen: int = 0):
+def run_experiment(subject_id: str, config_file: str, overwrite: bool = False, screen: int = 0):
 
     config = load_config(config_file)
     subject_dir = create_subject_dir(config.root_dir, subject_id, overwrite)
@@ -150,7 +151,10 @@ def run_trial(
     win.flip()
 
     response, response_time = wait_for_response(config, clock, keys=["left", "right"])
-
+    if response == side:
+        response = True
+    else:
+        response = False
     return response, response_time
 
 def make_sequence(
@@ -169,14 +173,15 @@ def make_sequence(
 
 def wait_for_response(
         config:Config, clock:core.Clock, keys:Union[None, List[str]] = None
-) -> Tuple[str, float]:
+) -> Tuple[Union[str,None], float]:
     clock.reset()
+    response = None
     if config.input_method == "Keyboard":
-        keys = event.waitKeys(keyList=["left", "right"])
+        keys = event.waitKeys(keyList=["left", "right"], maxWait=config.max_wait)
         response = keys[0]
     elif isinstance(config.input_method, pygame.joystick.JoystickType):
         response = None
-        while response is None:
+        while response is None and clock.getTime().real < config.max_wait:
             pygame.event.pump()
             button_states = [
                 config.input_method.get_button(i) for i in range(config.input_method.get_numbuttons())
@@ -188,7 +193,6 @@ def wait_for_response(
     else:
         raise ValueError("No valid input method found!")
     response_time = clock.getTime()
-    print(response)
     return response, response_time
 
 def draw_frames(
@@ -243,15 +247,14 @@ def draw_text(win: visual.Window, message: str, config:Config) -> None:
     core.wait(1)
 
 
-def create_subject_dir(root: Path, subject_id: int, overwrite: bool) -> Path:
-    subject = f"sub-{str(subject_id).zfill(2)}"
-    subject_dir = Path(root) / "data" / subject
+def create_subject_dir(root: Path, subject_id: str, overwrite: bool) -> Path:
+    subject_dir = Path(root) / "data" / subject_id
     if subject_dir.exists():
         if overwrite is True:
             pass
         else:
             raise FileExistsError(
-                f"Folder for subject {subject} already exists! \n Change the subject ID or use the --overwrite flag!"
+                f"Folder for {subject_id} already exists! \n Change the subject ID or use the --overwrite flag!"
             )
     else:
         subject_dir.mkdir(parents=True)
@@ -267,7 +270,7 @@ def load_config(config_file: str) -> Config:
 
 def main_cli():
     parser = argparse.ArgumentParser(description="A Python implementation of the Posner attention cueing task built on PsychoPy")
-    parser.add_argument("subject_id", type=int, help="Subject ID used to name files and folders")
+    parser.add_argument("subject_id", type=str, help="Subject ID used to name files and folders")
     parser.add_argument("config", type=str, help="Path to the JSON file with the experiments configuration")
     parser.add_argument("--screen", type=int, default=0, help="Number of the screen where window is displayed (defaults to 0)")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite existing data for this subject")
