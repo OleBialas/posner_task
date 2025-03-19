@@ -16,7 +16,7 @@ class ExperimentHandler(FileSystemEventHandler):
             return
         if not event.src_path.endswith('.csv'):
             return
-        time.sleep(5) # Wait to ensure file written
+        time.sleep(2) # Wait to ensure file written
         
         # Get the participant directory and ID
         participant_dir = os.path.dirname(event.src_path)
