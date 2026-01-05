@@ -186,7 +186,7 @@ def wait_for_response(
     clock.reset()
     response = None
     if config.input_method == "Keyboard":
-        response = _get_response_keyboard(keys, max_wait)
+        response = _get_response_keyboard(keys, max_wait, config)
     elif isinstance(config.controller, pygame.joystick.JoystickType):
         response = _get_response_controller(keys, max_wait,clock, config)
     else:
@@ -217,7 +217,7 @@ def _get_response_controller(keys, max_wait, clock, config):
             break
     return response
 
-def _get_response_keyboard(keys, max_wait) -> str:
+def _get_response_keyboard(keys, max_wait, config) -> str:
     if keys is not None:
         key_list = [KEYMAP[config.input_method][k] for k in keys]
         keys = event.waitKeys(keyList=key_list, maxWait=max_wait)
