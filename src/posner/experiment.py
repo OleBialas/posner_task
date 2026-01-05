@@ -15,7 +15,7 @@ KEYMAP = {
     "Keyboard":{
         "left":"left",
         "right":"right",
-        "exit":"esc"
+        "exit":"escape"
     },
     "Controller":{
         "left":"A",
