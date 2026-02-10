@@ -114,7 +114,6 @@ def run_experiment(win: visual.Window, config_file: str, overwrite: bool = False
             end = True
     df = pd.concat(df)
     df.to_csv(subject_dir / f"{subject_id}_data.csv", index=False)
-    run_experiment(win, config_file)
 
 
 def run_block(
@@ -229,11 +228,16 @@ def _get_response_controller(keys, max_wait, clock, config):
 
 
 def _get_response_keyboard(keys, max_wait, config) -> str:
+    reverse_map = {v: k for k, v in KEYMAP[config.input_method].items()}
     if keys is not None:
         key_list = [KEYMAP[config.input_method][k] for k in keys]
-        keys = event.waitKeys(keyList=key_list, maxWait=max_wait)
-        response = keys[0]
-        return response
+        pressed = event.waitKeys(keyList=key_list, maxWait=max_wait)
+        response = pressed[0]
+        return reverse_map.get(response, response)
+    else:
+        pressed = event.waitKeys(maxWait=max_wait)
+        response = pressed[0]
+        return reverse_map.get(response, response)
 
 
 def draw_frames(
