@@ -4,19 +4,21 @@ from unittest import mock
 import random
 import pytest
 from psychopy import visual
-from posner.experiment import create_subject_dir, Config
+from posner.experiment import make_subject_dir, Config
 
 
 @pytest.fixture
 def config_dict():
     return {
         "root_dir": "",
+        "input_method": "Keyboard",
+        "max_wait": 2.0,
         "fix_dur": 0.5,
         "cue_dur": 0.5,
         "fix_radius": 0.025,
         "fix_color": "white",
         "stim_radius": 0.05,
-        "stim_color":"red",
+        "stim_color": "red",
         "n_blocks": 2,
         "n_trials": 10,
         "p_valid": 0.8,
@@ -38,8 +40,10 @@ def write_config(config_dict, tmp_path):
 
 
 @pytest.fixture
-def create_temp_subject_dir(tmp_path):
-    subject_dir = create_subject_dir(tmp_path, 1, False)
+def create_temp_subject_dir(tmp_path, config_dict):
+    config_dict["root_dir"] = str(tmp_path)
+    config = Config(**config_dict)
+    subject_dir = make_subject_dir(config, "1")
     return subject_dir
 
 

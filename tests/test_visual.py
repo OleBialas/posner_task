@@ -20,14 +20,11 @@ def test_draw_frames(create_config, mock_window, mock_rect):
     assert colors == ["red", "white"]
 
 
-def test_draw_text(mock_window, mock_text, create_config):
-    for msg, first_word in zip(
-        ["hello", "goodbye", "block 1"], ["Welcome", "Thank", "Press"]
-    ):
-        draw_text(mock_window, message=msg, config=create_config)
+def test_draw_text(mock_window, mock_text):
+    for msg in ["hello", "goodbye", "block 1"]:
+        draw_text(mock_window, msg)
         _, kwargs = mock_text.call_args
-        text = kwargs["text"].split(" ")
-        assert text[0] == first_word
+        assert kwargs["text"] == msg
 
 
 def test_draw_stimulus(create_config, mock_window, mock_circle):

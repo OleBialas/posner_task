@@ -12,17 +12,10 @@ from psychopy import visual, core, event
 import pygame
 
 KEYMAP = {
-    "Keyboard":{
-        "left":"left",
-        "right":"right",
-        "exit":"escape"
-    },
-    "Controller":{
-        "left":"A",
-        "right":"Y",
-        "exit":"X"
-    }
-          }
+    "Keyboard": {"left": "left", "right": "right", "exit": "escape"},
+    "Controller": {"left": "A", "right": "Y", "exit": "X"},
+}
+
 
 class Pos(BaseModel):
     left: Tuple[float, float]
@@ -35,9 +28,7 @@ class Pos(BaseModel):
 
 
 class Config(BaseModel):
-    model_config = {
-        "arbitrary_types_allowed": True
-    }
+    model_config = {"arbitrary_types_allowed": True}
     root_dir: Path
     input_method: Literal["Keyboard", "Controller"]
     controller: Optional[pygame.joystick.JoystickType] = None
@@ -107,11 +98,13 @@ def run_experiment(win: visual.Window, config_file: str, overwrite: bool = False
     subject_id = get_text_input(win, "Enter you NAME and press any button to continue")
     subject_dir = make_subject_dir(config, subject_id)
     while subject_dir is None:
-        subject_id = get_text_input(win, "The name already exists, pick a DIFFERENT one!", color="red")
+        subject_id = get_text_input(
+            win, "The name already exists, pick a DIFFERENT one!", color="red"
+        )
         subject_dir = make_subject_dir(config, subject_id)
 
     display_instruction(win, config, clock)
-    
+
     end = False
     df = []
     while not end:
@@ -120,21 +113,29 @@ def run_experiment(win: visual.Window, config_file: str, overwrite: bool = False
         if response == "exit":
             end = True
     df = pd.concat(df)
-    df.to_csv(subject_dir/f'{subject_id}_data.csv', index=False)
+    df.to_csv(subject_dir / f"{subject_id}_data.csv", index=False)
     run_experiment(win, config_file)
+
 
 def run_block(
     win: visual.Window,
     clock: core.Clock,
     config: Config,
 ) -> pd.DataFrame:
-    
+
     df = pd.DataFrame()
-    for i in range(3):
+    for i in range(config.n_trials):
         side, valid = roll_condition(config.p_valid)
         response, response_time = run_trial(win, clock, side, valid, config)
         row = pd.DataFrame(
-            [{"side": side, "valid": valid, "response": response, "response_time": response_time}]
+            [
+                {
+                    "side": side,
+                    "valid": valid,
+                    "response": response,
+                    "response_time": response_time,
+                }
+            ]
         )
         df = pd.concat([df, row])
     return df
@@ -168,31 +169,39 @@ def run_trial(
     draw_stimulus(win, config, side)
     win.flip()
 
-    response, response_time = wait_for_response(config, clock, keys=["left", "right"], max_wait=config.max_wait)
+    response, response_time = wait_for_response(
+        config, clock, keys=["left", "right"], max_wait=config.max_wait
+    )
     if response == side:
         response = True
     else:
         response = False
     return response, response_time
 
+
 def roll_condition(p_valid: float) -> Tuple[Literal["left", "right"], bool]:
     side = np.random.choice(["left", "right"])
-    valid = np.random.choice([True, False], p=[p_valid, 1-p_valid])
+    valid = np.random.choice([True, False], p=[p_valid, 1 - p_valid])
     return side, valid
 
+
 def wait_for_response(
-        config:Config, clock:core.Clock, keys:Union[None, List[str]]=None, max_wait:Union[int, float]=np.inf
-) -> Tuple[Union[str,None], float]:
+    config: Config,
+    clock: core.Clock,
+    keys: Union[None, List[str]] = None,
+    max_wait: Union[int, float] = np.inf,
+) -> Tuple[Union[str, None], float]:
     clock.reset()
     response = None
     if config.input_method == "Keyboard":
         response = _get_response_keyboard(keys, max_wait, config)
     elif isinstance(config.controller, pygame.joystick.JoystickType):
-        response = _get_response_controller(keys, max_wait,clock, config)
+        response = _get_response_controller(keys, max_wait, clock, config)
     else:
         raise ValueError("No valid input method found!")
     response_time = clock.getTime()
     return response, response_time
+
 
 def _get_response_controller(keys, max_wait, clock, config):
     if keys is not None:
@@ -203,19 +212,21 @@ def _get_response_controller(keys, max_wait, clock, config):
     while response is None and clock.getTime().real < max_wait:
         pygame.event.pump()
         button_states = [
-            config.controller.get_button(i) for i in range(config.controller.get_numbuttons())
+            config.controller.get_button(i)
+            for i in range(config.controller.get_numbuttons())
         ]
-        if button_states[0]: # A button on 8BitDo
+        if button_states[0]:  # A button on 8BitDo
             response = "right"
         elif button_states[4]:
-            response = "left" # Y button on 8BitDo
+            response = "left"  # Y button on 8BitDo
         elif button_states[3]:
-            response = "exit" # Y button on 8BitDo
+            response = "exit"  # Y button on 8BitDo
         elif any(button_states):
             response = "random"
         if response in key_list or (keys is None and response == "random"):
             break
     return response
+
 
 def _get_response_keyboard(keys, max_wait, config) -> str:
     if keys is not None:
@@ -223,6 +234,7 @@ def _get_response_keyboard(keys, max_wait, config) -> str:
         keys = event.waitKeys(keyList=key_list, maxWait=max_wait)
         response = keys[0]
         return response
+
 
 def draw_frames(
     win: visual.Window,
@@ -240,7 +252,10 @@ def draw_frames(
 
 def draw_fixation(win: visual.Window, config: Config) -> None:
     fixation = visual.Circle(
-        win, radius=config.fix_radius, size=(1 / win.aspect, 1), fillColor=config.fix_color
+        win,
+        radius=config.fix_radius,
+        size=(1 / win.aspect, 1),
+        fillColor=config.fix_color,
     )
     fixation.draw()
 
@@ -262,11 +277,13 @@ def draw_stimulus(
     )
     stimulus.draw()
 
+
 def draw_text(win: visual.Window, text: str) -> None:
     text_stim = visual.TextStim(win, text=text)
     text_stim.draw()
     win.flip()
     core.wait(0.5)
+
 
 def display_instruction(win, config, clock):
     text = f"""Fixate the {config.fix_color.upper()} dot in the middle.
@@ -278,20 +295,28 @@ def display_instruction(win, config, clock):
     draw_text(win, text)
     wait_for_response(config, clock)
 
+
 def display_break_prompt(win, config, clock):
     text = f" Press {KEYMAP[config.input_method]['exit']} if you want to exit. Press any other key to keep going"
     draw_text(win, text)
     response, _ = wait_for_response(config, clock, keys=["left", "right", "exit"])
     return response
 
-def get_text_input( win:visual.Window, header_text:str, footer_text:str="", max_length:int=20, color="white") -> str:
-    
+
+def get_text_input(
+    win: visual.Window,
+    header_text: str,
+    footer_text: str = "",
+    max_length: int = 20,
+    color="white",
+) -> str:
+
     header = visual.TextStim(win, text=header_text, pos=(0, 0.3), color=color)
-    text_box = visual.Rect(win, width=0.7, height=0.3, pos=(0,0), fillColor='darkgrey')
-    display_text = visual.TextStim(win, text="", pos=(0,0), color='black')
+    text_box = visual.Rect(win, width=0.7, height=0.3, pos=(0, 0), fillColor="darkgrey")
+    display_text = visual.TextStim(win, text="", pos=(0, 0), color="black")
     footer = visual.TextStim(win, text=footer_text, pos=(0, -0.2))
     current_text = ""
-    
+
     while True:
         header.draw()
         text_box.draw()
@@ -301,17 +326,23 @@ def get_text_input( win:visual.Window, header_text:str, footer_text:str="", max_
         win.flip()
         keys = event.waitKeys()
         assert isinstance(keys, list)
-        
-        if 'return' in keys or 'enter' in keys:
+
+        if "return" in keys or "enter" in keys:
             return current_text  # User confirmed entry
-        
-        elif 'backspace' in keys:
+
+        elif "backspace" in keys:
             current_text = current_text[:-1]
-        
-        else: # Add the pressed key if it's a valid character and within length limit
+
+        else:  # Add the pressed key if it's a valid character and within length limit
             for key in keys:
                 if len(key) == 1 and len(current_text) < max_length:
-                    if key in string.ascii_letters + string.digits + string.punctuation + ' ':
+                    if (
+                        key
+                        in string.ascii_letters
+                        + string.digits
+                        + string.punctuation
+                        + " "
+                    ):
                         current_text += key
 
 
@@ -322,7 +353,7 @@ def load_config(config_file: str) -> Config:
     return Config(**config_dict)
 
 
-def make_subject_dir(config:Config, subject_id:str) -> Union[None, Path]:
+def make_subject_dir(config: Config, subject_id: str) -> Union[None, Path]:
     subject_dir = Path(config.root_dir) / "data" / subject_id
     if subject_dir.exists():
         return None
@@ -330,17 +361,32 @@ def make_subject_dir(config:Config, subject_id:str) -> Union[None, Path]:
         subject_dir.mkdir(parents=True)
         return subject_dir
 
+
 def main_cli():
-    parser = argparse.ArgumentParser(description="A Python implementation of the Posner attention cueing task built on PsychoPy")
-    parser.add_argument("config", type=str, help="Path to the JSON file with the experiments configuration")
-    parser.add_argument("--screen", type=int, default=0, help="Number of the screen where window is displayed (defaults to 0)")
-    parser.add_argument("--test", action="store_true", help="Run an automated test of the experiment")
+    parser = argparse.ArgumentParser(
+        description="A Python implementation of the Posner attention cueing task built on PsychoPy"
+    )
+    parser.add_argument(
+        "config",
+        type=str,
+        help="Path to the JSON file with the experiments configuration",
+    )
+    parser.add_argument(
+        "--screen",
+        type=int,
+        default=0,
+        help="Number of the screen where window is displayed (defaults to 0)",
+    )
+    parser.add_argument(
+        "--test", action="store_true", help="Run an automated test of the experiment"
+    )
     args = parser.parse_args()
     win = visual.Window(fullscr=True, screen=args.screen)
     if args.test is False:
         run_experiment(win, args.config)
     else:
         test_experiment(args.subject_id, args.config, args.overwrite, args.screen)
+
 
 if __name__ == "__main__":
     main_cli()
