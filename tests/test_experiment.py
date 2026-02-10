@@ -32,13 +32,16 @@ def test_run_experiment_calls(
     write_config, mock_window, mock_circle, mock_rect, mock_text, mock_waitKeys
 ):
     from unittest.mock import patch
+
     config = load_config(write_config)
 
     # Mock get_text_input to return a subject ID
     with patch("posner.experiment.get_text_input", return_value="test_subject"):
         # Mock to exit after one block by returning "exit" on break prompt
         # 1 call for instruction + n_trials for block + 1 call for break prompt
-        mock_waitKeys.side_effect = [["left"]] * (WAITKEY_CALL_PER_TRIAL * config.n_trials + 1) + [["escape"]]
+        mock_waitKeys.side_effect = [["left"]] * (
+            WAITKEY_CALL_PER_TRIAL * config.n_trials + 1
+        ) + [["escape"]]
         run_experiment(mock_window, write_config)
 
     # Account for: initial instruction + trials in one block + break prompt
@@ -49,13 +52,16 @@ def test_run_experiment_writes_files(
     write_config, mock_window, mock_circle, mock_rect, mock_text, mock_waitKeys
 ):
     from unittest.mock import patch
+
     config = load_config(write_config)
 
     # Mock get_text_input to return a subject ID
     with patch("posner.experiment.get_text_input", return_value="test_subject"):
         # Mock to exit after one block
         # 1 call for instruction + n_trials for block + 1 call for break prompt
-        mock_waitKeys.side_effect = [["left"]] * (WAITKEY_CALL_PER_TRIAL * config.n_trials + 1) + [["escape"]]
+        mock_waitKeys.side_effect = [["left"]] * (
+            WAITKEY_CALL_PER_TRIAL * config.n_trials + 1
+        ) + [["escape"]]
         run_experiment(mock_window, write_config)
 
     files = list(Path(config.root_dir).glob("data/*/*.csv"))

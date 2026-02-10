@@ -171,10 +171,6 @@ def run_trial(
     response, response_time = wait_for_response(
         config, clock, keys=["left", "right"], max_wait=config.max_wait
     )
-    if response == side:
-        response = True
-    else:
-        response = False
     return response, response_time
 
 
