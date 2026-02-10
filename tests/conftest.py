@@ -76,5 +76,5 @@ def mock_text():
 @pytest.fixture
 def mock_waitKeys():
     with mock.patch("posner.experiment.event.waitKeys") as mock_waitKeys:
-        mock_waitKeys.side_effect = lambda keyList: [random.choice(keyList)]
+        mock_waitKeys.side_effect = lambda keyList, maxWait=None: [random.choice(keyList)]
         yield mock_waitKeys

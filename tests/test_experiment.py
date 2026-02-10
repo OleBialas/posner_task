@@ -37,10 +37,11 @@ def test_run_experiment_calls(
     # Mock get_text_input to return a subject ID
     with patch("posner.experiment.get_text_input", return_value="test_subject"):
         # Mock to exit after one block by returning "exit" on break prompt
-        mock_waitKeys.side_effect = [["left"]] * (WAITKEY_CALL_PER_TRIAL * config.n_trials) + [["escape"]]
+        # 1 call for instruction + n_trials for block + 1 call for break prompt
+        mock_waitKeys.side_effect = [["left"]] * (WAITKEY_CALL_PER_TRIAL * config.n_trials + 1) + [["escape"]]
         run_experiment(mock_window, write_config)
 
-    # Account for: trials in one block + initial instruction + break prompt
+    # Account for: initial instruction + trials in one block + break prompt
     assert mock_waitKeys.call_count >= WAITKEY_CALL_PER_TRIAL * config.n_trials + 2
 
 
@@ -53,7 +54,8 @@ def test_run_experiment_writes_files(
     # Mock get_text_input to return a subject ID
     with patch("posner.experiment.get_text_input", return_value="test_subject"):
         # Mock to exit after one block
-        mock_waitKeys.side_effect = [["left"]] * (WAITKEY_CALL_PER_TRIAL * config.n_trials) + [["escape"]]
+        # 1 call for instruction + n_trials for block + 1 call for break prompt
+        mock_waitKeys.side_effect = [["left"]] * (WAITKEY_CALL_PER_TRIAL * config.n_trials + 1) + [["escape"]]
         run_experiment(mock_window, write_config)
 
     files = list(Path(config.root_dir).glob("data/*/*.csv"))
