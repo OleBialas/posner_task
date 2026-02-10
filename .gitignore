@@ -5,3 +5,7 @@ demo.py
 data
 leaderboard.csv
 leaderboard.html
+
+# pixi environments
+.pixi
+*.egg-info

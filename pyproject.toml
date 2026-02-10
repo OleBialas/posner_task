@@ -30,3 +30,16 @@ dependencies = [
 Homepage = "https://github.com/OleBialas/posner_task"
 Issues = "https://github.com/OleBialas/posner_task/issues"
 
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["win-64"]
+
+[tool.pixi.pypi-dependencies]
+posner = { path = ".", editable = true }
+
+[tool.pixi.tasks]
+
+[tool.pixi.dependencies]
+python = "3.10.*"
+pytest = ">=9.0.2,<10"
